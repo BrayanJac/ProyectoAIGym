@@ -1,11 +1,14 @@
 from ultralytics import YOLO
 import cv2
-from utils import angle, speak_async, rest_screen
+import os
+from src.utils import angle, rest_screen, draw_progress_bar
 
 UP, DOWN, CONF = 50, 160, 0.5
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "../yolov8n-pose.pt")
+
 
 def run_curl_izquierdo(target_reps, rest_time):
-    model = YOLO("yolov8n-pose.pt")
+    model = YOLO(MODEL_PATH)
     cap = cv2.VideoCapture(0)
 
     reps = 0
@@ -28,14 +31,25 @@ def run_curl_izquierdo(target_reps, rest_time):
             c = r[0].keypoints.conf[0]
 
             if min(c[5], c[7], c[9]) > CONF:
+                # Dibuja puntos de referencia
+                cv2.circle(frame, (int(p[5][0]), int(p[5][1])), 5, (0, 255, 0), -1)  # hombro - verde
+                cv2.circle(frame, (int(p[7][0]), int(p[7][1])), 5, (0, 255, 255), -1)  # codo - cian
+                cv2.circle(frame, (int(p[9][0]), int(p[9][1])), 5, (0, 165, 255), -1)  # muñeca - naranja
+                
+                # Dibuja líneas del brazo
+                cv2.line(frame, (int(p[5][0]), int(p[5][1])), (int(p[7][0]), int(p[7][1])), (0, 200, 255), 2)
+                cv2.line(frame, (int(p[7][0]), int(p[7][1])), (int(p[9][0]), int(p[9][1])), (0, 200, 255), 2)
+                
                 ang = angle(p[5], p[7], p[9])
+                
+                # Dibujar barra de progreso
+                draw_progress_bar(frame, ang, UP, DOWN)
 
                 if ang < UP and state == "down":
                     state = "up"
 
                 if ang > DOWN and state == "up":
                     reps += 1
-                    speak_async(reps)
                     state = "down"
 
         cv2.putText(frame, f"Reps: {reps}/{target_reps}",
@@ -52,4 +66,3 @@ def run_curl_izquierdo(target_reps, rest_time):
 
     cap.release()
     cv2.destroyAllWindows()
-    return reps

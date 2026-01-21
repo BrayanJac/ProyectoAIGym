@@ -1,18 +1,20 @@
+import sys
+import os
 import tkinter as tk
 from tkinter import messagebox
 import threading
 
-from utils import speak_async, start_voice
-from curl_derecho import run_curl_derecho
-from curl_izquierdo import run_curl_izquierdo
-from curl_ambos import run_curl_ambos
-from flexion_cuello import run_flexion_cuello
-from rotacion_cuello import run_rotacion_cuello
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+
+from src.exercises import (
+    run_curl_derecho,
+    run_curl_izquierdo,
+    run_curl_ambos,
+    run_flexion_cuello,
+    run_rotacion_cuello,
+)
 
 
-# -----------------------------
-# FUNCIÓN PRINCIPAL
-# -----------------------------
 def start_exercise(exercise_type):
     try:
         reps = int(entry_reps.get())
@@ -28,27 +30,19 @@ def start_exercise(exercise_type):
 
     def workout():
         root.withdraw()
-        speak_async("Entrenamiento iniciado")
 
         for s in range(1, series + 1):
-            speak_async(f"Serie {s}")
-
             if exercise_type == "derecho":
                 run_curl_derecho(reps, rest)
-
             elif exercise_type == "izquierdo":
                 run_curl_izquierdo(reps, rest)
-
             elif exercise_type == "ambos":
                 run_curl_ambos(reps, rest)
-
             elif exercise_type == "flexion_cuello":
                 run_flexion_cuello(reps, rest)
-
             elif exercise_type == "rotacion_cuello":
                 run_rotacion_cuello(reps, rest)
 
-        speak_async("Entrenamiento finalizado")
         root.deiconify()
 
         messagebox.showinfo(
@@ -56,65 +50,132 @@ def start_exercise(exercise_type):
             "Entrenamiento terminado.\nPuedes elegir otro ejercicio."
         )
 
-    # 🔹 THREAD (OBLIGATORIO)
     threading.Thread(target=workout, daemon=True).start()
 
 
-# -----------------------------
-# PROGRAMA PRINCIPAL
-# -----------------------------
 if __name__ == "__main__":
-    start_voice()
-
     root = tk.Tk()
-    root.title("Entrenador Inteligente")
-    root.geometry("420x620")
+    root.title("Entrenador Inteligente AI Gym")
+    root.update_idletasks()
+
+    # Centrar ventana
+    window_width = 500
+    window_height = 750
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    x = (screen_width // 2) - (window_width // 2)
+    y = (screen_height // 2) - (window_height // 2)
+
+    root.geometry(f"{window_width}x{window_height}+{x}+{y}")
     root.resizable(False, False)
-
-    tk.Label(root, text="Entrenador Inteligente",
-             font=("Arial", 18, "bold")).pack(pady=15)
-
-    frame_inputs = tk.Frame(root)
-    frame_inputs.pack(pady=10)
-
-    tk.Label(frame_inputs, text="Repeticiones").grid(row=0, column=0)
-    entry_reps = tk.Entry(frame_inputs, width=10, justify="center")
-    entry_reps.grid(row=0, column=1)
-
-    tk.Label(frame_inputs, text="Series").grid(row=1, column=0)
-    entry_series = tk.Entry(frame_inputs, width=10, justify="center")
-    entry_series.grid(row=1, column=1)
-
-    tk.Label(frame_inputs, text="Descanso (s)").grid(row=2, column=0)
-    entry_rest = tk.Entry(frame_inputs, width=10, justify="center")
-    entry_rest.grid(row=2, column=1)
-
+    
+    # Paleta de colores
+    BG_COLOR = "#1a1a1a"
+    ACCENT_COLOR = "#00d4ff"
+    BUTTON_COLOR = "#0099cc"
+    BUTTON_HOVER = "#00ccff"
+    TEXT_COLOR = "#ffffff"
+    LABEL_COLOR = "#cccccc"
+    
+    root.config(bg=BG_COLOR)
+    
+    # Título principal
+    title_frame = tk.Frame(root, bg=ACCENT_COLOR, height=80)
+    title_frame.pack(fill=tk.X, padx=0, pady=0)
+    title_frame.pack_propagate(False)
+    
+    tk.Label(title_frame, 
+             text="Entrenador Inteligente",
+             font=("Segoe UI", 24, "bold"),
+             bg=ACCENT_COLOR,
+             fg="#000000").pack(pady=15)
+    
+    # Frame de inputs
+    input_label = tk.Label(root, 
+                           text="Configuración de Entrenamiento",
+                           font=("Segoe UI", 12, "bold"),
+                           bg=BG_COLOR,
+                           fg=ACCENT_COLOR)
+    input_label.pack(pady=(20, 10))
+    
+    frame_inputs = tk.Frame(root, bg=BG_COLOR)
+    frame_inputs.pack(pady=10, padx=20)
+    
+    # Entrada de repeticiones
+    tk.Label(frame_inputs, text="Repeticiones:", font=("Segoe UI", 10), 
+             bg=BG_COLOR, fg=LABEL_COLOR).grid(row=0, column=0, sticky="w", pady=8)
+    entry_reps = tk.Entry(frame_inputs, width=15, justify="center",
+                         font=("Segoe UI", 11),
+                         bg="#2a2a2a", fg=ACCENT_COLOR, 
+                         insertbackground=ACCENT_COLOR,
+                         relief=tk.FLAT, bd=2)
+    entry_reps.grid(row=0, column=1, padx=10, pady=8)
+    
+    # Entrada de series
+    tk.Label(frame_inputs, text="Series:", font=("Segoe UI", 10),
+             bg=BG_COLOR, fg=LABEL_COLOR).grid(row=1, column=0, sticky="w", pady=8)
+    entry_series = tk.Entry(frame_inputs, width=15, justify="center",
+                           font=("Segoe UI", 11),
+                           bg="#2a2a2a", fg=ACCENT_COLOR,
+                           insertbackground=ACCENT_COLOR,
+                           relief=tk.FLAT, bd=2)
+    entry_series.grid(row=1, column=1, padx=10, pady=8)
+    
+    # Entrada de descanso
+    tk.Label(frame_inputs, text="Descanso (s):", font=("Segoe UI", 10),
+             bg=BG_COLOR, fg=LABEL_COLOR).grid(row=2, column=0, sticky="w", pady=8)
+    entry_rest = tk.Entry(frame_inputs, width=15, justify="center",
+                         font=("Segoe UI", 11),
+                         bg="#2a2a2a", fg=ACCENT_COLOR,
+                         insertbackground=ACCENT_COLOR,
+                         relief=tk.FLAT, bd=2)
+    entry_rest.grid(row=2, column=1, padx=10, pady=8)
+    
+    # Valores por defecto
     entry_reps.insert(0, "10")
-    entry_series.insert(0, "3")
+    entry_series.insert(0, "2")
     entry_rest.insert(0, "10")
-
-    tk.Label(root, text="Selecciona ejercicio",
-             font=("Arial", 14)).pack(pady=20)
-
-    tk.Button(root, text="Curl Derecho", width=30,
-              command=lambda: start_exercise("derecho")).pack(pady=5)
-
-    tk.Button(root, text="Curl Izquierdo", width=30,
-              command=lambda: start_exercise("izquierdo")).pack(pady=5)
-
-    tk.Button(root, text="Curl Ambos", width=30,
-              command=lambda: start_exercise("ambos")).pack(pady=5)
-
+    
+    # Estilo de botones
+    button_style = {
+        "font": ("Segoe UI", 10, "bold"),
+        "width": 35,
+        "bg": BUTTON_COLOR,
+        "fg": TEXT_COLOR,
+        "relief": tk.FLAT,
+        "padx": 10,
+        "pady": 8,
+        "cursor": "hand2",
+        "activebackground": BUTTON_HOVER,
+        "activeforeground": TEXT_COLOR
+    }
+    
+    # Ejercicios de brazos
+    tk.Label(root, text="Ejercicios de Brazos",
+             font=("Segoe UI", 12, "bold"),
+             bg=BG_COLOR,
+             fg=ACCENT_COLOR).pack(pady=(20, 10))
+    
+    tk.Button(root, text="Curl Derecho", command=lambda: start_exercise("derecho"), **button_style).pack(pady=5)
+    tk.Button(root, text="Curl Izquierdo", command=lambda: start_exercise("izquierdo"), **button_style).pack(pady=5)
+    tk.Button(root, text="Curl Ambos Brazos", command=lambda: start_exercise("ambos"), **button_style).pack(pady=5)
+    
+    # Ejercicios de cuello
     tk.Label(root, text="Ejercicios de Cuello",
-             font=("Arial", 12, "bold")).pack(pady=10)
-
-    tk.Button(root, text="Flexión de Cuello", width=30,
-              command=lambda: start_exercise("flexion_cuello")).pack(pady=5)
-
-    tk.Button(root, text="Rotación de Cuello", width=30,
-              command=lambda: start_exercise("rotacion_cuello")).pack(pady=5)
-
-    tk.Label(root, text="ESC para salir de cámara",
-             font=("Arial", 9), fg="gray").pack(side="bottom", pady=10)
+             font=("Segoe UI", 12, "bold"),
+             bg=BG_COLOR,
+             fg=ACCENT_COLOR).pack(pady=(20, 10))
+    
+    tk.Button(root, text="Flexión de Cuello", command=lambda: start_exercise("flexion_cuello"), **button_style).pack(pady=5)
+    tk.Button(root, text="Rotación de Cuello", command=lambda: start_exercise("rotacion_cuello"), **button_style).pack(pady=5)
+    
+    # Footer
+    tk.Label(root, text="Presiona ESC para salir de la cámara",
+             font=("Segoe UI", 9), 
+             bg=BG_COLOR,
+             fg="#666666").pack(side="bottom", pady=15)
 
     root.mainloop()
+

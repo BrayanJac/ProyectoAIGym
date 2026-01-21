@@ -1,16 +1,17 @@
 from ultralytics import YOLO
 import cv2
 import numpy as np
-from utils import speak_async, rest_screen
+import os
+from src.utils import rest_screen, draw_rotation_progress_bar
 
-# Configuración para detectar rotación de cuello
-# Usamos la distancia horizontal entre orejas
 CONF = 0.5
-THRESHOLD_LEFT = 1.3   # Cabeza girada a la izquierda (oreja izq más visible)
-THRESHOLD_RIGHT = 0.7  # Cabeza girada a la derecha (oreja der más visible)
+THRESHOLD_LEFT = 1.3
+THRESHOLD_RIGHT = 0.7
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "../yolov8n-pose.pt")
+
 
 def run_rotacion_cuello(target_reps, rest_time):
-    model = YOLO("yolov8n-pose.pt")
+    model = YOLO(MODEL_PATH)
     cap = cv2.VideoCapture(0)
 
     reps = 0
@@ -32,32 +33,31 @@ def run_rotacion_cuello(target_reps, rest_time):
             p = r[0].keypoints.xy[0]
             c = r[0].keypoints.conf[0]
 
-            # Keypoints: 0-nariz, 3-oreja_izq, 4-oreja_der
             if min(c[0], c[3], c[4]) > CONF:
                 nariz_x = p[0][0]
                 oreja_izq_x = p[3][0]
                 oreja_der_x = p[4][0]
 
-                # Calculamos el centro entre las orejas
                 centro_orejas = (oreja_izq_x + oreja_der_x) / 2
 
-                # Distancia de la nariz al centro
                 distancia_izq = abs(nariz_x - oreja_izq_x)
                 distancia_der = abs(nariz_x - oreja_der_x)
 
-                # Ratio para determinar rotación
                 ratio = distancia_izq / distancia_der if distancia_der > 0 else 1.0
 
                 # Dibuja puntos de referencia
-                cv2.circle(frame, (int(p[0][0]), int(p[0][1])), 5, (0, 255, 0), -1)  # nariz
-                cv2.circle(frame, (int(p[3][0]), int(p[3][1])), 5, (255, 0, 0), -1)  # oreja izq
-                cv2.circle(frame, (int(p[4][0]), int(p[4][1])), 5, (0, 0, 255), -1)  # oreja der
+                cv2.circle(frame, (int(p[0][0]), int(p[0][1])), 5, (0, 255, 0), -1)  # nariz - verde
+                cv2.circle(frame, (int(p[3][0]), int(p[3][1])), 5, (0, 255, 255), -1)  # oreja izq - cian
+                cv2.circle(frame, (int(p[4][0]), int(p[4][1])), 5, (0, 165, 255), -1)  # oreja der - naranja
 
                 # Línea entre orejas
                 cv2.line(frame, 
                         (int(oreja_izq_x), int(p[3][1])),
                         (int(oreja_der_x), int(p[4][1])),
-                        (255, 255, 0), 2)
+                        (0, 200, 255), 2)
+                
+                # Dibujar barra de progreso
+                draw_rotation_progress_bar(frame, ratio, THRESHOLD_LEFT, THRESHOLD_RIGHT)
 
                 # Estado: cabeza girada a la izquierda
                 if ratio > THRESHOLD_LEFT and state == "center":
@@ -66,7 +66,6 @@ def run_rotacion_cuello(target_reps, rest_time):
                 # Estado: cabeza girada a la derecha (completa repetición)
                 elif ratio < THRESHOLD_RIGHT and state == "left":
                     reps += 1
-                    speak_async(reps)
                     state = "center"
 
                 # Volver al centro desde derecha

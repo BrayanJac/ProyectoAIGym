@@ -1,16 +1,17 @@
 from ultralytics import YOLO
 import cv2
 import numpy as np
-from utils import speak_async, rest_screen
+import os
+from src.utils import rest_screen, draw_flexion_progress_bar
 
-# Configuración para detectar flexión de cuello
-# Usamos la distancia vertical entre nariz y oreja
 CONF = 0.5
-THRESHOLD_UP = 0.85    # Cabeza hacia arriba/atrás (nariz más arriba que oreja)
-THRESHOLD_DOWN = 1.15  # Cabeza hacia abajo/adelante (nariz más abajo que oreja)
+THRESHOLD_UP = 0.85
+THRESHOLD_DOWN = 1.15
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "../yolov8n-pose.pt")
+
 
 def run_flexion_cuello(target_reps, rest_time):
-    model = YOLO("yolov8n-pose.pt")
+    model = YOLO(MODEL_PATH)
     cap = cv2.VideoCapture(0)
 
     reps = 0
@@ -32,28 +33,25 @@ def run_flexion_cuello(target_reps, rest_time):
             p = r[0].keypoints.xy[0]
             c = r[0].keypoints.conf[0]
 
-            # Keypoints: 0-nariz, 3-oreja_izq, 4-oreja_der
-            # Usamos nariz (0) y promedio de orejas (3,4)
             if min(c[0], c[3], c[4]) > CONF:
                 nariz_y = p[0][1]
                 oreja_y = (p[3][1] + p[4][1]) / 2
 
-                # Calculamos ratio de posición
                 ratio = nariz_y / oreja_y if oreja_y > 0 else 1.0
 
                 # Dibuja puntos de referencia
-                cv2.circle(frame, (int(p[0][0]), int(p[0][1])), 5, (0, 255, 0), -1)  # nariz
-                cv2.circle(frame, (int(p[3][0]), int(p[3][1])), 5, (255, 0, 0), -1)  # oreja izq
-                cv2.circle(frame, (int(p[4][0]), int(p[4][1])), 5, (255, 0, 0), -1)  # oreja der
+                cv2.circle(frame, (int(p[0][0]), int(p[0][1])), 5, (0, 255, 0), -1)  # nariz - verde
+                cv2.circle(frame, (int(p[3][0]), int(p[3][1])), 5, (0, 255, 255), -1)  # oreja izq - cian
+                cv2.circle(frame, (int(p[4][0]), int(p[4][1])), 5, (0, 165, 255), -1)  # oreja der - naranja
+                
+                # Dibujar barra de progreso
+                draw_flexion_progress_bar(frame, ratio, THRESHOLD_UP, THRESHOLD_DOWN)
 
-                # Estado: cabeza hacia arriba
                 if ratio < THRESHOLD_UP and state == "neutral":
                     state = "up"
 
-                # Estado: cabeza hacia abajo (completa repetición)
                 if ratio > THRESHOLD_DOWN and state == "up":
                     reps += 1
-                    speak_async(reps)
                     state = "neutral"
 
                 # Mostrar ratio para debug
