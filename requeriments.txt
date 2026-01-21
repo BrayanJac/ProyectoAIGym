@@ -1,2 +1,12 @@
 pip install pyttsx3
 pip install ultralytics opencv-python numpy
+
+1. Flexión de Cuello 
+Detecta movimientos de cabeza adelante y atrás
+Usa las keypoints de nariz y orejas para calcular la inclinación
+Cuenta repeticiones cuando mueves la cabeza hacia arriba y luego hacia abajo
+
+2. Rotación de Cuello 
+Detecta movimientos de cabeza izquierda y derecha
+Usa las keypoints de nariz y orejas para calcular la rotación
+Cuenta repeticiones cuando giras la cabeza de izquierda a derecha

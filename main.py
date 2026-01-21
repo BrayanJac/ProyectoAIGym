@@ -6,6 +6,8 @@ from utils import speak_async, start_voice
 from curl_derecho import run_curl_derecho
 from curl_izquierdo import run_curl_izquierdo
 from curl_ambos import run_curl_ambos
+from flexion_cuello import run_flexion_cuello
+from rotacion_cuello import run_rotacion_cuello
 
 
 # -----------------------------
@@ -40,6 +42,12 @@ def start_exercise(exercise_type):
             elif exercise_type == "ambos":
                 run_curl_ambos(reps, rest)
 
+            elif exercise_type == "flexion_cuello":
+                run_flexion_cuello(reps, rest)
+
+            elif exercise_type == "rotacion_cuello":
+                run_rotacion_cuello(reps, rest)
+
         speak_async("Entrenamiento finalizado")
         root.deiconify()
 
@@ -60,7 +68,7 @@ if __name__ == "__main__":
 
     root = tk.Tk()
     root.title("Entrenador Inteligente")
-    root.geometry("420x520")
+    root.geometry("420x620")
     root.resizable(False, False)
 
     tk.Label(root, text="Entrenador Inteligente",
@@ -96,6 +104,15 @@ if __name__ == "__main__":
 
     tk.Button(root, text="Curl Ambos", width=30,
               command=lambda: start_exercise("ambos")).pack(pady=5)
+
+    tk.Label(root, text="Ejercicios de Cuello",
+             font=("Arial", 12, "bold")).pack(pady=10)
+
+    tk.Button(root, text="Flexión de Cuello", width=30,
+              command=lambda: start_exercise("flexion_cuello")).pack(pady=5)
+
+    tk.Button(root, text="Rotación de Cuello", width=30,
+              command=lambda: start_exercise("rotacion_cuello")).pack(pady=5)
 
     tk.Label(root, text="ESC para salir de cámara",
              font=("Arial", 9), fg="gray").pack(side="bottom", pady=10)
